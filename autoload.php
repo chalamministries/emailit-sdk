@@ -23,7 +23,7 @@ if (!class_exists('EmailIt\\EmailItClient')) {
 		
 		// Replace namespace separators with directory separators
 		// and append '.php'
-		$file = __DIR__ . '/src/' . str_replace('\\', '/', $relative_class) . '.php';
+		$file = __DIR__ . '/src/EmailIt/' . str_replace('\\', '/', $relativeClass) . '.php';
 		
 		// If the file exists, require it
 		if (file_exists($file)) {
