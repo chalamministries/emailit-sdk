@@ -1,3 +1,5 @@
+---
+
 **EmailIt SDK for PHP Documentation**
 
 **Table of Contents**
@@ -20,18 +22,48 @@ The EmailIt SDK for PHP is a client library that enables you to interact with th
 
 ## Installation
 
-To install the EmailIt SDK for PHP, you can use Composer, the package manager for PHP. Run the following command to install the SDK:
+### Composer
+
+The recommended way to install the EmailIt SDK for PHP is by using Composer, the package manager for PHP. Run the following command to install the SDK:
 
 ```bash
 composer require emailit/emailit-sdk
 ```
 
-## Getting Started
+### Manual Installation
 
-First, make sure you have installed the SDK using Composer. Then, use the following code to initialize the `EmailItClient` with your API key and base URL (default is `https://api.emailit.com/v1`).
+If you prefer not to use Composer, you can manually install the SDK by downloading the latest release from the [GitHub repository](https://github.com/yourusername/emailit-sdk) and copying the contents of the `src` folder to your project.
+
+After copying the files, you can use the `autoload.php` file to autoload the classes in your project. Include the `autoload.php` file at the beginning of your script:
+
+```php
+require_once 'path/to/emailit-sdk/src/autoload.php';
+```
+
+## Usage
+
+### Composer Autoload
+
+If you installed the SDK using Composer, you can use the following code to initialize the `EmailItClient` with your API key and base URL (default is `https://api.emailit.com/v1`):
 
 ```php
 require_once 'vendor/autoload.php';
+
+use EmailIt\EmailItClient;
+use EmailIt\EmailBuilder;
+
+$apiKey = 'your_api_key_here';
+$baseUrl = 'https://api.emailit.com/v1';
+
+$client = new EmailItClient($apiKey, $baseUrl);
+```
+
+### Manual Autoload
+
+If you manually installed the SDK and are using the `autoload.php` file, you can use the following code to initialize the `EmailItClient` with your API key and base URL (default is `https://api.emailit.com/v1`):
+
+```php
+require_once 'path/to/emailit-sdk/src/autoload.php';
 
 use EmailIt\EmailItClient;
 use EmailIt\EmailBuilder;
@@ -155,3 +187,13 @@ try {
     echo 'API Error: ' . $e->getMessage() . ' (Status Code: ' . $e->getCode() . ')';
 }
 ```
+
+## Contributing
+
+Contributions are welcome! If you encounter any issues or have suggestions for improvement, please submit an issue or pull request on the [GitHub repository](https://github.com/yourusername/emailit-sdk).
+
+## License
+
+The EmailIt SDK for PHP is licensed under the MIT License. See the [LICENSE](LICENSE) file for more information.
+
+---
