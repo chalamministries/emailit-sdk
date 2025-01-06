@@ -30,7 +30,7 @@ composer require emailit/emailit-sdk
 
 ### Manual Installation
 
-If you prefer not to use Composer, you can manually install the SDK by downloading the latest release from the [GitHub repository](https://github.com/yourusername/emailit-sdk) and copying the contents of the `src` folder to your project.
+If you prefer not to use Composer, you can manually install the SDK by downloading the latest release from the [GitHub repository](https://github.com/chalamministries/emailit-sdk) and copying the contents of the `src` folder to your project.
 
 After copying the files, you can use the `autoload.php` file to autoload the classes in your project. Include the `autoload.php` file at the beginning of your script:
 
