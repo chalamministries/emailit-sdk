@@ -1,5 +1,3 @@
----
-
 **EmailIt SDK for PHP Documentation**
 
 **Table of Contents**
@@ -195,5 +193,3 @@ Contributions are welcome! If you encounter any issues or have suggestions for i
 ## License
 
 The EmailIt SDK for PHP is licensed under the MIT License. See the [LICENSE](LICENSE) file for more information.
-
----
