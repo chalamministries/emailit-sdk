@@ -1,86 +1,65 @@
-**EmailIt SDK for PHP Documentation**
+# EmailIt SDK for PHP
 
-**Table of Contents**
+A PHP SDK for interacting with the EmailIt API, allowing you to send emails, manage audiences, credentials, sending domains, and events.
 
-1. [Introduction](#introduction)
+## Table of Contents
+
+1. [Requirements](#requirements)
 2. [Installation](#installation)
-3. [Getting Started](#getting-started)
-4. [Email Client](#email-client)
-   - [EmailBuilder](#emailbuilder)
-5. [Managers](#managers)
-   - [AudienceManager](#audience-manager)
-   - [CredentialManager](#credential-manager)
-   - [SendingDomainManager](#sending-domain-manager)
-   - [EventManager](#event-manager)
-6. [Exceptions](#exceptions)
+3. [Basic Usage](#basic-usage)
+4. [Features](#features)
+5. [Examples](#examples)
+6. [Error Handling](#error-handling)
 
-## Introduction
+## Requirements
 
-The EmailIt SDK for PHP is a client library that enables you to interact with the EmailIt API, allowing you to send emails, manage audiences, credentials, sending domains, and events. This documentation will guide you through the usage of the SDK and its features.
+- PHP 7.3 or higher
+- cURL extension enabled
 
 ## Installation
 
-### Composer
+You have two options for installing the EmailIt SDK:
 
-The recommended way to install the EmailIt SDK for PHP is by using Composer, the package manager for PHP. Run the following command to install the SDK:
+### Option 1: Using Composer (Recommended)
 
 ```bash
 composer require emailit/emailit-sdk
 ```
 
-### Manual Installation
-
-If you prefer not to use Composer, you can manually install the SDK by downloading the latest release from the [GitHub repository](https://github.com/chalamministries/emailit-sdk) and copying the contents of the `src` folder to your project.
-
-After copying the files, you can use the `autoload.php` file to autoload the classes in your project. Include the `autoload.php` file at the beginning of your script:
+Then in your PHP script:
 
 ```php
-require_once 'path/to/emailit-sdk/src/autoload.php';
-```
-
-## Usage
-
-### Composer Autoload
-
-If you installed the SDK using Composer, you can use the following code to initialize the `EmailItClient` with your API key and base URL (default is `https://api.emailit.com/v1`):
-
-```php
-require_once 'vendor/autoload.php';
+require 'vendor/autoload.php';
 
 use EmailIt\EmailItClient;
-use EmailIt\EmailBuilder;
 
-$apiKey = 'your_api_key_here';
-$baseUrl = 'https://api.emailit.com/v1';
-
-$client = new EmailItClient($apiKey, $baseUrl);
+$client = new EmailItClient('your_api_key');
 ```
 
-### Manual Autoload
+### Option 2: Manual Installation
 
-If you manually installed the SDK and are using the `autoload.php` file, you can use the following code to initialize the `EmailItClient` with your API key and base URL (default is `https://api.emailit.com/v1`):
+1. Download the latest release from GitHub
+2. Include the autoloader in your PHP script:
 
 ```php
-require_once 'path/to/emailit-sdk/src/autoload.php';
+require_once 'path/to/emailit-sdk/autoload.php';
 
 use EmailIt\EmailItClient;
-use EmailIt\EmailBuilder;
 
-$apiKey = 'your_api_key_here';
-$baseUrl = 'https://api.emailit.com/v1';
-
-$client = new EmailItClient($apiKey, $baseUrl);
+$client = new EmailItClient('your_api_key');
 ```
 
-## Email Client
+## Basic Usage
 
-The `EmailItClient` class is the main entry point for interacting with the EmailIt API. It provides methods to create email messages, manage audiences, credentials, sending domains, and events.
+### Initialize the Client
 
-### EmailBuilder
+```php
+use EmailIt\EmailItClient;
 
-The `EmailBuilder` class allows you to build email messages with ease. It supports setting the `from`, `to`, `reply_to`, `subject`, `html`, and `text` content, as well as adding attachments and custom headers.
+$client = new EmailItClient('your_api_key');
+```
 
-**Example usage:**
+### Send an Email
 
 ```php
 $email = $client->email();
@@ -90,106 +69,112 @@ $email->from('sender@example.com')
       ->subject('Test Email')
       ->html('<h1>Hello, World!</h1>')
       ->text('This is a test email.')
-      ->addAttachment('path/to/attachment.txt', file_get_contents('path/to/attachment.txt'), 'text/plain')
-      ->addHeader('X-Custom-Header', 'Custom Value')
       ->send();
 ```
 
-## Managers
+## Features
 
-The SDK provides several manager classes to handle specific aspects of the EmailIt API:
+### Email Management
 
-### AudienceManager
-
-The `AudienceManager` class allows you to manage audiences, including listing, creating, retrieving, updating, and deleting audiences, as well as subscribing email addresses to an audience.
-
-**Example usage:**
+The EmailBuilder class provides a fluent interface for creating and sending emails:
 
 ```php
-$audienceManager = $client->audiences();
+$email = $client->email();
+$email->from('sender@example.com')
+      ->to('recipient@example.com')
+      ->replyTo('reply@example.com')
+      ->subject('Test Email')
+      ->html('<h1>Hello, World!</h1>')
+      ->text('This is a test email.')
+      ->addAttachment('file.pdf', $fileContent, 'application/pdf')
+      ->addHeader('X-Custom-Header', 'Value')
+      ->send();
+```
+
+### Audience Management
+
+Manage your email audiences:
+
+```php
+$audiences = $client->audiences();
 
 // List audiences
-$audienceList = $audienceManager->list();
+$list = $audiences->list(25, 1, 'Newsletter');
 
-// Create a new audience
-$audienceManager->create('New Audience');
+// Create audience
+$newAudience = $audiences->create('New Newsletter');
 
-// Subscribe an email address to an audience
-$audienceManager->subscribe('audience_token', 'subscriber@example.com', 'First', 'Last', ['custom_field' => 'custom_value']);
+// Subscribe a user
+$audiences->subscribe(
+    'audience_token',
+    'user@example.com',
+    'John',
+    'Doe',
+    ['interests' => 'technology']
+);
 ```
 
-### CredentialManager
+### Credential Management
 
-The `CredentialManager` class enables you to manage credentials, such as listing, creating, retrieving, updating, and deleting credentials.
-
-**Example usage:**
+Handle SMTP and API credentials:
 
 ```php
-$credentialManager = $client->credentials();
+$credentials = $client->credentials();
 
 // List credentials
-$credentialList = $credentialManager->list();
+$list = $credentials->list(25, 1, null, 'smtp');
 
-// Create a new credential
-$credentialManager->create('New Credential', 'smtp');
+// Create credential
+$newCredential = $credentials->create('Main SMTP', 'smtp');
 ```
 
-### SendingDomainManager
+### Sending Domain Management
 
-The `SendingDomainManager` class allows you to manage sending domains, including listing, creating, retrieving, checking DNS records, and deleting sending domains.
-
-**Example usage:**
+Manage your sending domains:
 
 ```php
-$sendingDomainManager = $client->sendingDomains();
+$domains = $client->sendingDomains();
 
-// List sending domains
-$sendingDomainList = $sendingDomainManager->list();
+// List domains
+$list = $domains->list(25, 1, 'example.com');
 
-// Create a new sending domain
-$sendingDomainManager->create('example.com');
+// Create domain
+$newDomain = $domains->create('emails.example.com');
 
-// Check DNS records of a sending domain
-$sendingDomainManager->checkDns('sending_domain_id');
+// Check DNS records
+$dnsStatus = $domains->checkDns('domain_id');
 ```
 
-### EventManager
+### Event Management
 
-The `EventManager` class enables you to manage events, such as listing and retrieving events, and getting available event types.
-
-**Example usage:**
+Track email-related events:
 
 ```php
-$eventManager = $client->events();
+$events = $client->events();
 
 // List events
-$eventList = $eventManager->list();
+$list = $events->list(25, 1, 'email.delivery.sent');
 
-// Retrieve an event by ID
-$event = $eventManager->get('event_id');
-
-// Get available event types
-$eventTypes = EventManager::getEventTypes();
+// Get specific event
+$event = $events->get('event_id');
 ```
 
-## Exceptions
+## Error Handling
 
-The `EmailItException` class is a custom exception thrown by the SDK when an error occurs while interacting with the EmailIt API. You can catch this exception to handle errors gracefully.
-
-**Example usage:**
+The SDK uses the `EmailItException` class for error handling:
 
 ```php
+use EmailIt\EmailItException;
+
 try {
-    // Perform an API request that may throw an EmailItException
+    $result = $client->email()
+        ->from('sender@example.com')
+        ->to('recipient@example.com')
+        ->subject('Test')
+        ->html('<p>Content</p>')
+        ->send();
 } catch (EmailItException $e) {
-    echo 'API Error: ' . $e->getMessage() . ' (Status Code: ' . $e->getCode() . ')';
+    echo 'Error: ' . $e->getMessage();
+    echo 'Code: ' . $e->getCode();
 }
 ```
-
-## Contributing
-
-Contributions are welcome! If you encounter any issues or have suggestions for improvement, please submit an issue or pull request on the [GitHub repository](https://github.com/yourusername/emailit-sdk).
-
-## License
-
-The EmailIt SDK for PHP is licensed under the MIT License. See the [LICENSE](LICENSE) file for more information.

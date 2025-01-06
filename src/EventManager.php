@@ -1,3 +1,7 @@
+<?php
+
+namespace EmailIt;
+
 class EventManager
 {
 	private EmailItClient $client;

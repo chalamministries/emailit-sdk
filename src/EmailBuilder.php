@@ -1,3 +1,7 @@
+<?php
+
+namespace EmailIt;
+
 class EmailBuilder
 {
 	private array $emailArr = [];

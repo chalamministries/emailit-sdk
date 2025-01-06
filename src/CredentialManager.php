@@ -1,3 +1,7 @@
+<?php
+
+namespace EmailIt;
+
 class CredentialManager
 {
 	private EmailItClient $client;

@@ -1,3 +1,7 @@
+<?php
+
+namespace EmailIt;
+
 class AudienceManager
 {
 	private EmailItClient $client;

@@ -1,3 +1,7 @@
+<?php
+
+namespace EmailIt;
+
 class SendingDomainManager
 {
 	private EmailItClient $client;

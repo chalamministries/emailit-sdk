@@ -1,3 +1,7 @@
+<?php
+
+namespace EmailIt;
+
 class EmailItClient
 {
 	private string $apiKey;
@@ -74,7 +78,7 @@ class EmailItClient
 	 * @return array
 	 * @throws EmailItException
 	 */
-	private function request(string $method, string $endpoint, array $params = []): array
+	public function request(string $method, string $endpoint, array $params = []): array
 	{
 		$ch = curl_init();
 		
