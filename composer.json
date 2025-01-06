@@ -1,0 +1,21 @@
+{
+  "name": "emailit/emailit-sdk",
+  "description": "EmailIt SDK for PHP",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Your Name",
+      "email": "your.email@example.com"
+    }
+  ],
+  "minimum-stability": "dev",
+  "require": {
+    "php": "^7.3"
+  },
+  "autoload": {
+    "psr-4": {
+      "EmailIt\\": "src/"
+    }
+  }
+}
