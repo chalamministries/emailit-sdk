@@ -5,13 +5,13 @@
   "license": "MIT",
   "authors": [
     {
-      "name": "Your Name",
-      "email": "your.email@example.com"
+      "name": "Steven Gauerke",
+      "email": "steven@chalamministries.com"
     }
   ],
   "minimum-stability": "dev",
   "require": {
-    "php": "^7.3"
+    "php": "^8.0"
   },
   "autoload": {
     "psr-4": {
