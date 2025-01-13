@@ -9,9 +9,11 @@
       "email": "steven@chalamministries.com"
     }
   ],
-  "minimum-stability": "dev-main",
+  "minimum-stability": "dev",
+  "prefer-stable": true,
   "require": {
-    "php": ">=7.4"
+    "php": ">=7.4",
+    "chalamministries/emailit-sdk": "dev-main"
   },
   "autoload": {
     "psr-4": {
