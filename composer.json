@@ -10,10 +10,8 @@
     }
   ],
   "minimum-stability": "dev",
-  "prefer-stable": true,
   "require": {
-    "php": ">=7.4",
-    "chalamministries/emailit-sdk": "dev-main"
+    "php": ">=7.4"
   },
   "autoload": {
     "psr-4": {
