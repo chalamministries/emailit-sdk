@@ -1,5 +1,5 @@
 {
-  "name": "chalamministries/emailit-sdk",
+  "name": "emailit/emailit-sdk",
   "description": "EmailIt SDK for PHP",
   "type": "library",
   "license": "MIT",
@@ -10,10 +10,10 @@
     }
   ],
   "minimum-stability": "dev",
+  "prefer-stable": true,
   "require": {
     "php": ">=7.4",
-    "ext-curl": "*",
-    "ext-json": "*"
+    "ext-curl": "*"
   },
   "autoload": {
     "psr-4": {
