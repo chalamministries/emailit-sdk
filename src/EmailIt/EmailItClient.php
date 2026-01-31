@@ -40,12 +40,24 @@ class EmailItClient
 	}
 	
 	/**
+	 * Create an API key manager instance
+	 * 
+	 * @return ApiKeyManager
+	 */
+	public function apiKeys(): ApiKeyManager
+	{
+		return new ApiKeyManager($this);
+	}
+	
+	/**
 	 * Create a credential manager instance
 	 * 
+	 * @deprecated Use apiKeys() instead.
 	 * @return CredentialManager
 	 */
 	public function credentials(): CredentialManager
 	{
+		trigger_error('EmailItClient::credentials() is deprecated. Use EmailItClient::apiKeys() instead.', E_USER_DEPRECATED);
 		return new CredentialManager($this);
 	}
 	

@@ -114,19 +114,29 @@ $audiences->subscribe(
 );
 ```
 
-### Credential Management
+### API Key Management
 
-Handle SMTP and API credentials:
+Manage your API keys:
 
 ```php
-$credentials = $client->credentials();
+$apiKeys = $client->apiKeys();
 
-// List credentials
-$list = $credentials->list(25, 1, null, 'smtp');
+// List API keys
+$list = $apiKeys->list(25, 1, 'Primary');
 
-// Create credential
-$newCredential = $credentials->create('Main SMTP', 'smtp');
+// Create API key
+$newApiKey = $apiKeys->create('Primary Sending Key', 'sending', [
+    'sending_domain_id' => 1234567890
+]);
+
+// Update API key
+$apiKeys->update($newApiKey['id'], ['name' => 'Updated API Key']);
+
+// Delete API key
+$apiKeys->delete($newApiKey['id']);
 ```
+
+> **Note:** `$client->credentials()` remains available for backwards compatibility but is deprecated in favor of `$client->apiKeys()`.
 
 ### Sending Domain Management
 
