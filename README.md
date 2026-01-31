@@ -63,14 +63,21 @@ $client = new EmailItClient('your_api_key');
 
 ```php
 $email = $client->email();
-$email->from('sender@example.com')
-      ->to('recipient@example.com')
+
+$result = $email->from('Sender <sender@example.com>')
+      ->to(['recipient1@example.com', 'recipient2@example.com'])
+      ->cc('marketing@example.com')
+      ->bcc('finance@example.com')
       ->replyTo('reply@example.com')
       ->subject('Test Email')
       ->html('<h1>Hello, World!</h1>')
       ->text('This is a test email.')
+      ->tracking(true, true)
+      ->scheduledAt('2026-02-01T12:00:00Z')
       ->send();
 ```
+
+> **Tip:** The value returned from `send()` includes the email identifier (for example, `id` or `uuid`). Pass that identifier to `get()`, `update()`, `cancel()`, and `retry()` to manage the message lifecycle.
 
 ## Features
 
@@ -80,15 +87,37 @@ The EmailBuilder class provides a fluent interface for creating and sending emai
 
 ```php
 $email = $client->email();
-$email->from('sender@example.com')
-      ->to('recipient@example.com')
+
+$result = $email->from('Sender <sender@example.com>')
+      ->to(['recipient@example.com', 'customer@example.com'])
+      ->addCc('manager@example.com')
+      ->addBcc('auditor@example.com')
       ->replyTo('reply@example.com')
       ->subject('Test Email')
       ->html('<h1>Hello, World!</h1>')
       ->text('This is a test email.')
       ->addAttachment('file.pdf', $fileContent, 'application/pdf')
       ->addHeader('X-Custom-Header', 'Value')
+      ->tracking(true, true)
+      ->addTag('welcome-series')
+      ->addMetadata('customer_id', 987654321)
       ->send();
+
+$emailId = $result['id'] ?? $result['uuid'] ?? null;
+
+if ($emailId !== null) {
+    // Update the scheduled time
+    $client->email()->update($emailId, [
+        'scheduled_at' => '2026-02-01T15:00:00Z'
+    ]);
+
+    // Cancel or retry as needed
+    $client->email()->cancel($emailId);
+    $client->email()->retry($emailId);
+
+    // Fetch the latest status
+    $details = $client->email()->get($emailId);
+}
 ```
 
 ### Audience Management
@@ -98,21 +127,36 @@ Manage your email audiences:
 ```php
 $audiences = $client->audiences();
 
-// List audiences
-$list = $audiences->list(25, 1, 'Newsletter');
+// List audiences (page 1, 25 per page, optional keyword search)
+$list = $audiences->list(1, 25, 'Newsletter');
 
-// Create audience
-$newAudience = $audiences->create('New Newsletter');
+// Create an audience with an optional description
+$newAudience = $audiences->create('New Newsletter', [
+    'description' => 'Subscribers to the primary product updates.',
+]);
 
-// Subscribe a user
-$audiences->subscribe(
-    'audience_token',
-    'user@example.com',
-    'John',
-    'Doe',
-    ['interests' => 'technology']
-);
+$audienceId = $newAudience['id'] ?? $newAudience['uuid'] ?? null;
+
+if ($audienceId) {
+    $subscribers = $audiences->subscribers($audienceId);
+    // Alternatively: $subscribers = $client->audienceSubscribers($audienceId);
+
+    // Add a subscriber
+    $subscriber = $subscribers->add('user@example.com', [
+        'first_name' => 'John',
+        'last_name' => 'Doe',
+        'custom_fields' => ['interests' => 'technology'],
+    ]);
+
+    // Update subscription preferences
+    $subscribers->update($subscriber['id'], ['subscribed' => true]);
+
+    // Remove a subscriber
+    $subscribers->delete($subscriber['id']);
+}
 ```
+
+> **Note:** `AudienceManager::subscribe()` remains available for backward compatibility but now proxies to the new subscriber endpoints.
 
 ### API Key Management
 
@@ -138,12 +182,12 @@ $apiKeys->delete($newApiKey['id']);
 
 > **Note:** `$client->credentials()` remains available for backwards compatibility but is deprecated in favor of `$client->apiKeys()`.
 
-### Sending Domain Management
+### Domain Management
 
-Manage your sending domains:
+Manage your domains:
 
 ```php
-$domains = $client->sendingDomains();
+$domains = $client->domains();
 
 // List domains
 $list = $domains->list(25, 1, 'example.com');
@@ -151,9 +195,11 @@ $list = $domains->list(25, 1, 'example.com');
 // Create domain
 $newDomain = $domains->create('emails.example.com');
 
-// Check DNS records
-$dnsStatus = $domains->checkDns('domain_id');
+// Verify DNS records
+$verification = $domains->verify($newDomain['id']);
 ```
+
+> **Note:** `$client->sendingDomains()` remains available for backwards compatibility but is deprecated in favor of `$client->domains()`.
 
 ### Event Management
 

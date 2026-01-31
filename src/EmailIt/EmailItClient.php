@@ -38,6 +38,14 @@ class EmailItClient
 	{
 		return new AudienceManager($this);
 	}
+
+	/**
+	 * Access subscriber operations for a specific audience.
+	 */
+	public function audienceSubscribers(string $audienceId): AudienceSubscriberManager
+	{
+		return new AudienceSubscriberManager($this, $audienceId);
+	}
 	
 	/**
 	 * Create an API key manager instance
@@ -62,12 +70,24 @@ class EmailItClient
 	}
 	
 	/**
+	 * Create a domain manager instance
+	 * 
+	 * @return DomainManager
+	 */
+	public function domains(): DomainManager
+	{
+		return new DomainManager($this);
+	}
+	
+	/**
 	 * Create a sending domain manager instance
 	 * 
+	 * @deprecated Use domains() instead.
 	 * @return SendingDomainManager
 	 */
 	public function sendingDomains(): SendingDomainManager
 	{
+		trigger_error('EmailItClient::sendingDomains() is deprecated. Use EmailItClient::domains() instead.', E_USER_DEPRECATED);
 		return new SendingDomainManager($this);
 	}
 	
@@ -94,7 +114,15 @@ class EmailItClient
 	{
 		$ch = curl_init();
 		
+		$normalizedMethod = strtoupper($method);
 		$url = $this->baseUrl . $endpoint;
+		
+		if ($normalizedMethod === 'GET' && !empty($params)) {
+			$queryString = http_build_query($params);
+			if ($queryString !== '') {
+				$url .= (strpos($url, '?') === false ? '?' : '&') . $queryString;
+			}
+		}
 		
 		curl_setopt_array($ch, [
 			CURLOPT_URL => $url,
@@ -103,11 +131,11 @@ class EmailItClient
 			CURLOPT_MAXREDIRS => 10,
 			CURLOPT_TIMEOUT => 30,
 			CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-			CURLOPT_CUSTOMREQUEST => $method,
+			CURLOPT_CUSTOMREQUEST => $normalizedMethod,
 			CURLOPT_HTTPHEADER => $this->formatHeaders(),
 		]);
 	
-		if (!empty($params)) {
+		if ($normalizedMethod !== 'GET' && !empty($params)) {
 			curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($params));
 		}
 	
@@ -134,55 +162,98 @@ class EmailItClient
 	}
 	
 	/**
-	 * Make HTTP request to API
-	 * 
+	 * Send a new email via the EmailIt API.
+	 *
+	 * @param array $params
+	 * @return array
+	 * @throws EmailItException
+	 */
+	public function sendEmail(array $params): array
+	{
+		$requiredFields = ['from', 'to', 'subject'];
+		$this->validateRequired($params, $requiredFields);
+
+		if (!isset($params['html']) && !isset($params['text'])) {
+			throw new EmailItException('Either html or text content must be provided');
+		}
+
+		if (isset($params['scheduled_at']) && $params['scheduled_at'] instanceof \DateTimeInterface) {
+			$params['scheduled_at'] = $params['scheduled_at']->format(DATE_ATOM);
+		}
+
+		return $this->request('POST', '/emails', $params);
+	}
+
+	/**
+	 * Send a new email via the EmailIt API.
+	 *
+	 * @deprecated Use sendEmail() instead.
 	 * @param array $params
 	 * @return array
 	 * @throws EmailItException
 	 */
 	public function sendEmailRequest(array $params): array
 	{
-		$requiredFields = ['from', 'to', 'subject'];
-		$this->validateRequired($params, $requiredFields);
-		
-		if (!isset($params['html']) && !isset($params['text'])) {
-			throw new EmailItException('Either html or text content must be provided');
+		trigger_error('EmailItClient::sendEmailRequest() is deprecated. Use EmailItClient::sendEmail() instead.', E_USER_DEPRECATED);
+
+		return $this->sendEmail($params);
+	}
+
+	/**
+	 * Retrieve an email by ID.
+	 *
+	 * @param string $emailId
+	 * @return array
+	 * @throws EmailItException
+	 */
+	public function getEmail(string $emailId): array
+	{
+		return $this->request('GET', "/emails/{$emailId}");
+	}
+
+	/**
+	 * Update a scheduled email by ID.
+	 *
+	 * @param string $emailId
+	 * @param array $params
+	 * @return array
+	 * @throws EmailItException
+	 */
+	public function updateEmail(string $emailId, array $params): array
+	{
+		if (empty($params)) {
+			throw new EmailItException('Update payload cannot be empty');
 		}
-	
-		$ch = curl_init();
-		
-		curl_setopt_array($ch, [
-			CURLOPT_URL => $this->baseUrl . '/emails',
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_ENCODING => '',
-			CURLOPT_MAXREDIRS => 10,
-			CURLOPT_TIMEOUT => 30,
-			CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-			CURLOPT_POST => true,
-			CURLOPT_POSTFIELDS => json_encode($params),
-			CURLOPT_HTTPHEADER => $this->formatHeaders(),
-		]);
-	
-		$response = curl_exec($ch);
-		$statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-		$error = curl_error($ch);
-		
-		curl_close($ch);
-	
-		if ($error) {
-			throw new EmailItException('API Request Error: ' . $error);
+
+		if (isset($params['scheduled_at']) && $params['scheduled_at'] instanceof \DateTimeInterface) {
+			$params['scheduled_at'] = $params['scheduled_at']->format(DATE_ATOM);
 		}
-	
-		$decodedResponse = json_decode($response, true);
-		
-		if ($statusCode >= 400) {
-			throw new EmailItException(
-				'API Error: ' . ($decodedResponse['message'] ?? 'Unknown error'),
-				$statusCode
-			);
-		}
-	
-		return $decodedResponse;
+
+		return $this->request('POST', "/emails/{$emailId}", $params);
+	}
+
+	/**
+	 * Cancel a scheduled email by ID.
+	 *
+	 * @param string $emailId
+	 * @return array
+	 * @throws EmailItException
+	 */
+	public function cancelEmail(string $emailId): array
+	{
+		return $this->request('POST', "/emails/{$emailId}/cancel");
+	}
+
+	/**
+	 * Retry a failed email by ID.
+	 *
+	 * @param string $emailId
+	 * @return array
+	 * @throws EmailItException
+	 */
+	public function retryEmail(string $emailId): array
+	{
+		return $this->request('POST', "/emails/{$emailId}/retry");
 	}
 	
 	/**
