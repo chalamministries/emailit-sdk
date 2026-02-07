@@ -201,6 +201,121 @@ $verification = $domains->verify($newDomain['id']);
 
 > **Note:** `$client->sendingDomains()` remains available for backwards compatibility but is deprecated in favor of `$client->domains()`.
 
+### Template Management
+
+Create and manage reusable templates:
+
+```php
+$templates = $client->templates();
+
+// List templates with optional filters
+$list = $templates->list(25, 1, [
+    'name' => 'Welcome',
+    'alias' => 'welcome-email',
+    'editor' => 'html',
+    'sort' => 'created_at',
+    'order' => 'desc',
+]);
+
+// Create a template
+$created = $templates->create([
+    'name' => 'Welcome Email',
+    'alias' => 'welcome-email',
+    'from' => 'Support <support@company.com>',
+    'subject' => 'Welcome to our service!',
+    'reply_to' => ['support@company.com'],
+    'html' => '<h1>Welcome!</h1><p>Thanks for joining us.</p>',
+    'text' => 'Welcome! Thanks for joining us.',
+    'editor' => 'html',
+]);
+
+$templateId = $created['data']['id'] ?? $created['id'] ?? null;
+
+if ($templateId) {
+    // Update template metadata or content
+    $templates->update($templateId, [
+        'subject' => 'Welcome! Updated version',
+    ]);
+
+    // Publish a template version
+    $templates->publish($templateId);
+
+    // Retrieve the template details
+    $details = $templates->get($templateId);
+
+    // Delete when no longer needed
+    $templates->delete($templateId);
+}
+```
+
+### Suppression Management
+
+Manage suppression entries for unsubscribes, bounces, or complaints:
+
+```php
+$suppressions = $client->suppressions();
+
+// List suppressions
+$list = $suppressions->list(25, 1);
+
+// Create a suppression entry
+$created = $suppressions->create('unsubscribed@example.com', 'unsubscribe', [
+    'reason' => 'User requested removal',
+    'keep_until' => null,
+]);
+
+$suppressionId = $created['data']['id'] ?? $created['id'] ?? null;
+
+if ($suppressionId) {
+    // Update suppression metadata
+    $suppressions->update($suppressionId, [
+        'reason' => 'Updated request',
+        'keep_until' => '2026-01-01T00:00:00.000000Z',
+    ]);
+
+    // Fetch the suppression entry
+    $details = $suppressions->get($suppressionId);
+
+    // Delete when no longer needed
+    $suppressions->delete($suppressionId);
+}
+```
+
+### Email Verification
+
+Verify individual addresses or run list verification jobs:
+
+```php
+$verifications = $client->emailVerifications();
+
+// Verify a single email address
+$verification = $verifications->verify('user@example.com', 'full');
+
+// Create a verification list
+$list = $verifications->createList('Marketing List Q1', [
+    'user1@example.com',
+    'user2@example.com',
+    'user3@example.com',
+]);
+
+$listId = $list['data']['id'] ?? $list['id'] ?? null;
+
+// List verification lists
+$lists = $verifications->listLists(10, 1);
+
+if ($listId) {
+    // Fetch list metadata
+    $details = $verifications->getList($listId);
+
+    // Fetch verification results
+    $results = $verifications->getListResults($listId, 50, 1);
+
+    // Export results (XLSX bytes)
+    $xlsx = $verifications->exportList($listId);
+    file_put_contents('verification_results.xlsx', $xlsx);
+}
+```
+
 ### Event Management
 
 Track email-related events:

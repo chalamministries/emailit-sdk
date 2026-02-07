@@ -92,6 +92,36 @@ class EmailItClient
 	}
 	
 	/**
+	 * Create a template manager instance
+	 *
+	 * @return TemplateManager
+	 */
+	public function templates(): TemplateManager
+	{
+		return new TemplateManager($this);
+	}
+
+	/**
+	 * Create a suppression manager instance
+	 *
+	 * @return SuppressionManager
+	 */
+	public function suppressions(): SuppressionManager
+	{
+		return new SuppressionManager($this);
+	}
+
+	/**
+	 * Create an email verification manager instance
+	 *
+	 * @return EmailVerificationManager
+	 */
+	public function emailVerifications(): EmailVerificationManager
+	{
+		return new EmailVerificationManager($this);
+	}
+
+	/**
 	 * Create an event manager instance
 	 * 
 	 * @return EventManager
@@ -159,6 +189,67 @@ class EmailItClient
 		}
 	
 		return $decodedResponse;
+	}
+
+	/**
+	 * Make HTTP request to API and return raw response body.
+	 *
+	 * @param string $method
+	 * @param string $endpoint
+	 * @param array $params
+	 * @param array $headers
+	 * @return string
+	 * @throws EmailItException
+	 */
+	public function requestRaw(string $method, string $endpoint, array $params = [], array $headers = []): string
+	{
+		$ch = curl_init();
+
+		$normalizedMethod = strtoupper($method);
+		$url = $this->baseUrl . $endpoint;
+
+		if ($normalizedMethod === 'GET' && !empty($params)) {
+			$queryString = http_build_query($params);
+			if ($queryString !== '') {
+				$url .= (strpos($url, '?') === false ? '?' : '&') . $queryString;
+			}
+		}
+
+		curl_setopt_array($ch, [
+			CURLOPT_URL => $url,
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_ENCODING => '',
+			CURLOPT_MAXREDIRS => 10,
+			CURLOPT_TIMEOUT => 30,
+			CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+			CURLOPT_CUSTOMREQUEST => $normalizedMethod,
+			CURLOPT_HTTPHEADER => $this->formatHeaders($headers),
+		]);
+
+		if ($normalizedMethod !== 'GET' && !empty($params)) {
+			curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($params));
+		}
+
+		$response = curl_exec($ch);
+		$statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		$error = curl_error($ch);
+
+		curl_close($ch);
+
+		if ($error) {
+			throw new EmailItException('API Request Error: ' . $error);
+		}
+
+		if ($statusCode >= 400) {
+			$decodedResponse = json_decode($response, true);
+			$message = is_array($decodedResponse)
+				? ($decodedResponse['message'] ?? 'Unknown error')
+				: (is_string($response) ? $response : 'Unknown error');
+
+			throw new EmailItException('API Error: ' . $message, $statusCode);
+		}
+
+		return (string) $response;
 	}
 	
 	/**
@@ -272,10 +363,11 @@ class EmailItClient
 		}
 	}
 	
-	private function formatHeaders(): array
+	private function formatHeaders(array $overrides = []): array
 	{
+		$headers = array_merge($this->headers, $overrides);
 		$formatted = [];
-		foreach ($this->headers as $key => $value) {
+		foreach ($headers as $key => $value) {
 			$formatted[] = "$key: $value";
 		}
 		return $formatted;
