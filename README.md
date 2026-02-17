@@ -81,6 +81,59 @@ $result = $email->from('Sender <sender@example.com>')
 
 ## Features
 
+### Endpoint Coverage
+
+| Area | Endpoint | SDK method |
+| --- | --- | --- |
+| Emails | /emails (send) | `$client->email()->send()` |
+| Emails | /emails/{id} (get) | `$client->email()->get($id)` |
+| Emails | /emails/{id} (update) | `$client->email()->update($id, $payload)` |
+| Emails | /emails/{id}/cancel | `$client->email()->cancel($id)` |
+| Emails | /emails/{id}/retry | `$client->email()->retry($id)` |
+| Domains | /domains (create) | `$client->domains()->create($domain)` |
+| Domains | /domains/{id} (get) | `$client->domains()->get($id)` |
+| Domains | /domains/{id} (update) | `$client->domains()->update($id, $payload)` |
+| Domains | /domains (list) | `$client->domains()->list($perPage, $page, $search)` |
+| Domains | /domains/{id} (delete) | `$client->domains()->delete($id)` |
+| API Keys | /api-keys (create) | `$client->apiKeys()->create($name, $type, $payload)` |
+| API Keys | /api-keys/{id} (get) | `$client->apiKeys()->get($id)` |
+| API Keys | /api-keys/{id} (update) | `$client->apiKeys()->update($id, $payload)` |
+| API Keys | /api-keys/{id} (delete) | `$client->apiKeys()->delete($id)` |
+| API Keys | /api-keys (list) | `$client->apiKeys()->list($perPage, $page, $search)` |
+| Audiences | /audiences (create) | `$client->audiences()->create($name, $payload)` |
+| Audiences | /audiences/{id} (get) | `$client->audiences()->get($id)` |
+| Audiences | /audiences/{id} (update) | `$client->audiences()->update($id, $payload)` |
+| Audiences | /audiences/{id} (delete) | `$client->audiences()->delete($id)` |
+| Audiences | /audiences (list) | `$client->audiences()->list($page, $perPage, $search)` |
+| Audience Subscribers | /audiences/{id}/subscribers (add) | `$client->audiences()->subscribers($id)->add($email, $payload)` |
+| Audience Subscribers | /audiences/{id}/subscribers/{id} (get) | `$client->audiences()->subscribers($id)->get($subscriberId)` |
+| Audience Subscribers | /audiences/{id}/subscribers/{id} (update) | `$client->audiences()->subscribers($id)->update($subscriberId, $payload)` |
+| Audience Subscribers | /audiences/{id}/subscribers/{id} (delete) | `$client->audiences()->subscribers($id)->delete($subscriberId)` |
+| Audience Subscribers | /audiences/{id}/subscribers (list) | `$client->audiences()->subscribers($id)->list($perPage, $page)` |
+| Templates | /templates (list) | `$client->templates()->list($perPage, $page, $filters)` |
+| Templates | /templates (create) | `$client->templates()->create($payload)` |
+| Templates | /templates/{id} (get) | `$client->templates()->get($id)` |
+| Templates | /templates/{id} (update) | `$client->templates()->update($id, $payload)` |
+| Templates | /templates/{id} (delete) | `$client->templates()->delete($id)` |
+| Templates | /templates/{id}/publish | `$client->templates()->publish($id)` |
+| Suppressions | /suppressions (list) | `$client->suppressions()->list($perPage, $page)` |
+| Suppressions | /suppressions (create) | `$client->suppressions()->create($email, $type, $payload)` |
+| Suppressions | /suppressions/{id} (get) | `$client->suppressions()->get($id)` |
+| Suppressions | /suppressions/{id} (update) | `$client->suppressions()->update($id, $payload)` |
+| Suppressions | /suppressions/{id} (delete) | `$client->suppressions()->delete($id)` |
+| Webhooks | /webhooks (list) | `$client->webhooks()->list($perPage, $page)` |
+| Webhooks | /webhooks (create) | `$client->webhooks()->create($payload)` |
+| Webhooks | /webhooks/{id} (get) | `$client->webhooks()->get($id)` |
+| Webhooks | /webhooks/{id} (update) | `$client->webhooks()->update($id, $payload)` |
+| Webhooks | /webhooks/{id} (delete) | `$client->webhooks()->delete($id)` |
+| Contacts | /contacts (list) | `$client->contacts()->list($perPage, $page)` |
+| Contacts | /contacts (create) | `$client->contacts()->create($payload)` |
+| Contacts | /contacts/{id} (get) | `$client->contacts()->get($id)` |
+| Contacts | /contacts/{id} (update) | `$client->contacts()->update($id, $payload)` |
+| Contacts | /contacts/{id} (delete) | `$client->contacts()->delete($id)` |
+| Events | /events (list) | `$client->events()->list($perPage, $page, $type)` |
+| Events | /events/{id} (get) | `$client->events()->get($id)` |
+
 ### Email Management
 
 The EmailBuilder class provides a fluent interface for creating and sending emails:
@@ -313,6 +366,81 @@ if ($listId) {
     // Export results (XLSX bytes)
     $xlsx = $verifications->exportList($listId);
     file_put_contents('verification_results.xlsx', $xlsx);
+}
+```
+
+### Webhook Management
+
+Manage webhook endpoints for event delivery:
+
+```php
+$webhooks = $client->webhooks();
+
+// List webhooks
+$list = $webhooks->list(10, 1);
+
+// Create a webhook
+$created = $webhooks->create([
+    'name' => 'Production Webhook',
+    'url' => 'https://example.com/webhook',
+    'all_events' => false,
+    'enabled' => true,
+    'events' => ['email.accepted', 'email.delivered', 'email.bounced'],
+]);
+
+$webhookId = $created['data']['id'] ?? $created['id'] ?? null;
+
+if ($webhookId) {
+    // Update the webhook
+    $webhooks->update($webhookId, [
+        'name' => 'Updated Webhook',
+        'enabled' => false,
+        'events' => ['email.accepted', 'email.bounced'],
+    ]);
+
+    // Fetch the webhook
+    $details = $webhooks->get($webhookId);
+
+    // Delete when no longer needed
+    $webhooks->delete($webhookId);
+}
+```
+
+### Contact Management
+
+Create and manage contacts used in audiences:
+
+```php
+$contacts = $client->contacts();
+
+// List contacts
+$list = $contacts->list(10, 1);
+
+// Create a contact
+$created = $contacts->create([
+    'email' => 'john@example.com',
+    'first_name' => 'John',
+    'last_name' => 'Doe',
+    'custom_fields' => ['company' => 'Acme'],
+    'audiences' => ['aud_123456789'],
+    'unsubscribed' => false,
+]);
+
+$contactId = $created['data']['id'] ?? $created['id'] ?? null;
+
+if ($contactId) {
+    // Update contact metadata
+    $contacts->update($contactId, [
+        'first_name' => 'Jane',
+        'last_name' => 'Smith',
+        'custom_fields' => ['company' => 'NewCorp'],
+    ]);
+
+    // Fetch the contact
+    $details = $contacts->get($contactId);
+
+    // Delete when no longer needed
+    $contacts->delete($contactId);
 }
 ```
 

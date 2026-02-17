@@ -122,6 +122,26 @@ class EmailItClient
 	}
 
 	/**
+	 * Create a webhook manager instance
+	 *
+	 * @return WebhookManager
+	 */
+	public function webhooks(): WebhookManager
+	{
+		return new WebhookManager($this);
+	}
+
+	/**
+	 * Create a contact manager instance
+	 *
+	 * @return ContactManager
+	 */
+	public function contacts(): ContactManager
+	{
+		return new ContactManager($this);
+	}
+
+	/**
 	 * Create an event manager instance
 	 * 
 	 * @return EventManager
